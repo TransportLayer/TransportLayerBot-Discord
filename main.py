@@ -22,16 +22,20 @@ import argparse
 import discord
 import asyncio
 
-class commands():
+class Commands():
+	@staticmethod
 	async def license(client, message, args):
 		await client.send_message(message.channel, "I'm licensed under the GNU Affero General Public License.\nFor details, visit: https://www.gnu.org/licenses/agpl.html")
 
+	@staticmethod
 	async def source(client, message, args):
 		await client.send_message(message.channel, "Get my source code here: https://github.com/TransportLayer/TransportLayerBot-Discord")
 
+	@staticmethod
 	async def test(client, message, args):
 		await client.send_message(message.channel, "Tested!")
 
+	@staticmethod
 	async def testedit(client, message, args):
 		sleep_time = 5
 		if len(args) > 0:
@@ -41,6 +45,13 @@ class commands():
 		await asyncio.sleep(sleep_time)
 		await client.edit_message(mid, "Edited!")
 
+commands = {
+	"license": Commands.license,
+	"source": Commands.source,
+	"test": Commands.test,
+	"testedit": Commands.testedit
+}
+
 class TransportLayerBot(discord.Client):
 	async def on_ready(self):
 		print("Logged in as {}, ID {}.".format(self.user.name, self.user.id))
@@ -49,14 +60,11 @@ class TransportLayerBot(discord.Client):
 		if not message.author == self.user.id:
 			if message.content.startswith('!'):
 				command, *args = message.content[1:].split()
-				try:
-					clientCommand = getattr(commands, command)
+				if command in commands:
 					try:
-						await clientCommand(self, message, args)
+						await commands[command](self, message, args)
 					except Exception as e:
 						await self.send_message(message.channel, "Something broke:\n```{}```".format(e))
-				except AttributeError:
-					pass	# Not a command.
 
 def main():
 	parser = argparse.ArgumentParser(description="TransportLayerBot for Discord")
