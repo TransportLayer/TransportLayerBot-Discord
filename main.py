@@ -47,7 +47,7 @@ class TransportLayerBot(discord.Client):
 
 	async def on_message(self, message):
 		if not message.author == self.user.id:
-			if message.content[0] == '!':
+			if message.content.startswith('!'):
 				command, *args = message.content[1:].split()
 				try:
 					clientCommand = getattr(commands, command)
