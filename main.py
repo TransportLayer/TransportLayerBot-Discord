@@ -1,5 +1,23 @@
 #!/usr/bin/env python3
 
+###############################################################################
+#   TransportLayerBot - An all-in-one user bot for Discord.                   #
+#   Copyright (C) 2016  TransportLayer                                        #
+#                                                                             #
+#   This program is free software: you can redistribute it and/or modify      #
+#   it under the terms of the GNU Affero General Public License as published  #
+#   by the Free Software Foundation, either version 3 of the License, or      #
+#   (at your option) any later version.                                       #
+#                                                                             #
+#   This program is distributed in the hope that it will be useful,           #
+#   but WITHOUT ANY WARRANTY; without even the implied warranty of            #
+#   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the             #
+#   GNU Affero General Public License for more details.                       #
+#                                                                             #
+#   You should have received a copy of the GNU Affero General Public License  #
+#   along with this program.  If not, see <http://www.gnu.org/licenses/>.     #
+###############################################################################
+
 import argparse
 import discord
 import asyncio
@@ -40,6 +58,19 @@ def main():
 	SETTINGS = vars(parser.parse_args())
 
 	try:
+		print("Welcome to TransportLayerBot!")
+		print("This software is licensed under the GNU Affero General Public License.")
+		print("See the LICENSE file for details.")
+		print("Get the source: https://github.com/TransportLayer/TransportLayerBot-Discord")
+		print("         _____")
+		print("        |     |         _______   _")
+		print("        |_____|        |___ ___| | |           _")
+		print("           |              | |    | |          / \\")
+		print("     ______|______        | |    | |         /__/     __/__")
+		print("  __|__  __|__  __|__     | |    | |___     /  |  _    /")
+		print(" |     ||     ||     |    |_|    |_____|   /__/  /_/  /")
+		print(" |_____||_____||_____|")
+		print()
 		print("Starting TransportLayerBot with Discord version {}...".format(discord.__version__))
 
 		client = TransportLayerBot()
