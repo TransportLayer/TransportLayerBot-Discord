@@ -1,4 +1,4 @@
-#!/usr/bin/env python3
+#!/usr/bin/env python3.5
 
 ###############################################################################
 #   TransportLayerBot - An all-in-one user bot for Discord.                   #
