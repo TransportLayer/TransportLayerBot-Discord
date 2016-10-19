@@ -23,6 +23,12 @@ import discord
 import asyncio
 
 class commands():
+	async def license(client, message, args):
+		await client.send_message(message.channel, "I'm licensed under the GNU Affero General Public License.\nFor details, visit: https://www.gnu.org/licenses/agpl.html")
+
+	async def source(client, message, args):
+		await client.send_message(message.channel, "Get my source code here: https://github.com/TransportLayer/TransportLayerBot-Discord")
+
 	async def test(client, message, args):
 		await client.send_message(message.channel, "Tested!")
 
