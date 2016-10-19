@@ -64,19 +64,19 @@ def main():
 	SETTINGS = vars(parser.parse_args())
 
 	try:
-		print("Welcome to TransportLayerBot!")
-		print("This software is licensed under the GNU Affero General Public License.")
-		print("See the LICENSE file for details.")
-		print("Get the source: https://github.com/TransportLayer/TransportLayerBot-Discord")
-		print("         _____")
-		print("        |     |         _______   _")
-		print("        |_____|        |___ ___| | |           _")
-		print("           |              | |    | |          / \\")
-		print("     ______|______        | |    | |         /__/     __/__")
-		print("  __|__  __|__  __|__     | |    | |___     /  |  _    /")
-		print(" |     ||     ||     |    |_|    |_____|   /__/  /_/  /")
-		print(" |_____||_____||_____|")
-		print()
+		print("""Welcome to TransportLayerBot!
+This software is licensed under the GNU Affero General Public License.
+See the LICENSE file for details.
+Get the source: https://github.com/TransportLayer/TransportLayerBot-Discord
+         _____
+        |     |         _______   _
+        |_____|        |___ ___| | |           _
+           |              | |    | |          / \\
+     ______|______        | |    | |         /__/     __/__
+  __|__  __|__  __|__     | |    | |___     /  |  _    /
+ |     ||     ||     |    |_|    |_____|   /__/  /_/  /
+ |_____||_____||_____|
+""")
 		print("Starting TransportLayerBot with Discord version {}...".format(discord.__version__))
 
 		client = TransportLayerBot()
