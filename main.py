@@ -45,11 +45,71 @@ class Commands():
 		await asyncio.sleep(sleep_time)
 		await client.edit_message(mid, "Edited!")
 
+	@staticmethod
+	async def play(client, message, args):
+		await client.change_presence(game=discord.Game(name=' '.join(args), url="https://github.com/TransportLayer/TransportLayerBot-Discord", type=0), status=None, afk=False)
+		await client.send_message(message.channel, "Now playing {}!".format(' '.join(args)))
+
+	@staticmethod
+	async def stopplaying(client, message, args):
+		await client.change_presence(game=discord.Game(name=None, url=None, type=None), status=None, afk=False)
+		await client.send_message(message.channel, "Stopped playing!")
+
+	@staticmethod
+	async def pretendtotype(client, message, args):
+		await client.send_message(message.channel, "Pretending to type!")
+		await client.send_typing(message.channel)
+
+	#@staticmethod
+	#async def initvoice(client, message, args):
+	#	await discord.opus.load_opus("libopus.so.1")
+
+	@staticmethod
+	async def checkvoice(client, message, args):
+		if discord.opus.is_loaded():
+			await client.send_message(message.channel, "Voice libraries loaded!")
+		else:
+			await client.send_message(message.channel, "Not ready!")
+
+	#@staticmethod
+	#async def testvoice(client, message, args):
+	#	vchannel = discord.utils.get(message.server.channels, name='Music 1', type=discord.ChannelType.voice)
+	#	vclient = await client.join_voice_channel(vchannel)
+	#	vplayer = vclient.create_ffmpeg_player("/home/nsg/Downloads/Far_Away_Sting.mp3")
+	#	vplayer.volume = 0.25
+	#	#vplayer = await vclient.create_ytdl_player("https://www.youtube.com/watch?v=_FQwhJn1Dls", options="-af volume=0.25")
+	#	vplayer.start()
+
+	@staticmethod
+	async def playyt(client, message, args):
+		vchannel = discord.utils.get(message.server.channels, name='Music 1', type=discord.ChannelType.voice)
+		vclient = await client.join_voice_channel(vchannel)
+		try:
+			vplayer = await vclient.create_ytdl_player(args[0])
+			if vplayer.duration <= 360:
+				await client.change_presence(game=discord.Game(name="{}...".format(vplayer.title[:37]), url=vplayer.url, type=1), status=None, afk=False)
+				await client.send_message(message.channel, "Now playing {}".format(vplayer.title))
+				vplayer.volume = 0.25
+				vplayer.start()
+				await asyncio.sleep(vplayer.duration + 1)
+				await client.change_presence(game=discord.Game(name=None, url=None, type=None), status=None, afk=False)
+			else:
+				await client.send_message(message.channel, "Refusing to play (video too long).".format(vplayer.title))
+		except Exception as e:
+			await client.send_message(message.channel, "Cannot play:\n```{}```".format(e))
+		await vclient.disconnect()
+
 commands = {
 	"license": Commands.license,
 	"source": Commands.source,
 	"test": Commands.test,
-	"testedit": Commands.testedit
+	"testedit": Commands.testedit,
+	"play": Commands.play,
+	"stopplaying": Commands.stopplaying,
+	#"initvoice": Commands.initvoice,
+	"checkvoice": Commands.checkvoice,
+	#"testvoice": Commands.testvoice,
+	"playyt": Commands.playyt
 }
 
 class TransportLayerBot(discord.Client):
