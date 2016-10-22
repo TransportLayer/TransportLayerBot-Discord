@@ -21,6 +21,16 @@
 import argparse
 import discord
 import asyncio
+from cleverbot import Cleverbot
+import random
+
+clever_session = {
+	"started": False,
+	"channel": None,
+	"bot_a": ["Bot A", None],
+	"bot_b": ["Bot B", None],
+	"last_response": ''
+}
 
 class Commands():
 	@staticmethod
@@ -99,6 +109,42 @@ class Commands():
 			await client.send_message(message.channel, "Cannot play:\n```{}```".format(e))
 		await vclient.disconnect()
 
+	@staticmethod
+	async def cleverstart(client, message, args):
+		if not clever_session["started"] and len(args) >= 2:
+			clever_session["started"] = True
+			random.seed()
+			clever_session["channel"] = message.channel
+			clever_session["bot_a"][0] = args[0]
+			clever_session["bot_a"][1] = Cleverbot()
+			clever_session["bot_b"][0] = args[1]
+			clever_session["bot_b"][1] = Cleverbot()
+			await client.send_message(clever_session["channel"], "`Session started!`")
+			if len(args) > 2:
+				clever_session["last_response"] = ' '.join(args[2:])
+				await client.send_message(clever_session["channel"], "`{}`: {}".format(clever_session["bot_a"][0], clever_session["last_response"]))
+			while clever_session["started"]:
+				clever_session["last_response"] = clever_session["bot_b"][1].ask(clever_session["last_response"])
+				await client.send_typing(clever_session["channel"])
+				await asyncio.sleep(random.randint(1, 3))
+				await client.send_message(clever_session["channel"], "`{}`: {}".format(clever_session["bot_b"][0], clever_session["last_response"]))
+				await asyncio.sleep(random.randint(3, 10))
+				await client.send_typing(clever_session["channel"])
+				await asyncio.sleep(random.randint(1, 3))
+				clever_session["last_response"] = clever_session["bot_a"][1].ask(clever_session["last_response"])
+				await client.send_message(clever_session["channel"], "`{}`: {}".format(clever_session["bot_a"][0], clever_session["last_response"]))
+				await asyncio.sleep(random.randint(3, 10))
+
+	@staticmethod
+	async def cleverstop(client, message, args):
+		if clever_session["started"]:
+			clever_session["started"] = False
+			await client.send_message(clever_session["channel"], "`Session killed :(`")
+			clever_session["channel"] = None
+			clever_session["bot_a"] = ["Bot A", None]
+			clever_session["bot_b"] = ["Bot B", None]
+			clever_session["last_response"] = ''
+
 commands = {
 	"license": Commands.license,
 	"source": Commands.source,
@@ -106,10 +152,13 @@ commands = {
 	"testedit": Commands.testedit,
 	"play": Commands.play,
 	"stopplaying": Commands.stopplaying,
+	"pretendtotype": Commands.pretendtotype,
 	#"initvoice": Commands.initvoice,
 	"checkvoice": Commands.checkvoice,
 	#"testvoice": Commands.testvoice,
-	"playyt": Commands.playyt
+	"playyt": Commands.playyt,
+	"cleverstart": Commands.cleverstart,
+	"cleverstop": Commands.cleverstop
 }
 
 class TransportLayerBot(discord.Client):
