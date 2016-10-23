@@ -23,9 +23,15 @@ import discord
 import asyncio
 from cleverbot import Cleverbot
 import random
+from gtts import gTTS
+import pickle
 
 clever_session = {
 	"started": False,
+	"paused": False,
+	"tts": False,
+	"vchannel": None,
+	"vclient": None,
 	"channel": None,
 	"bot_a": ["Bot A", None],
 	"bot_b": ["Bot B", None],
@@ -111,7 +117,7 @@ class Commands():
 
 	@staticmethod
 	async def cleverstart(client, message, args):
-		if not clever_session["started"] and len(args) >= 2:
+		if message.channel.id == "239285682013601792" and not clever_session["started"] and len(args) >= 2:
 			clever_session["started"] = True
 			random.seed()
 			clever_session["channel"] = message.channel
@@ -123,27 +129,104 @@ class Commands():
 			if len(args) > 2:
 				clever_session["last_response"] = ' '.join(args[2:])
 				await client.send_message(clever_session["channel"], "`{}`: {}".format(clever_session["bot_a"][0], clever_session["last_response"]))
-			while clever_session["started"]:
-				clever_session["last_response"] = clever_session["bot_b"][1].ask(clever_session["last_response"])
-				await client.send_typing(clever_session["channel"])
-				await asyncio.sleep(random.randint(1, 3))
-				await client.send_message(clever_session["channel"], "`{}`: {}".format(clever_session["bot_b"][0], clever_session["last_response"]))
-				await asyncio.sleep(random.randint(3, 10))
-				await client.send_typing(clever_session["channel"])
-				await asyncio.sleep(random.randint(1, 3))
-				clever_session["last_response"] = clever_session["bot_a"][1].ask(clever_session["last_response"])
-				await client.send_message(clever_session["channel"], "`{}`: {}".format(clever_session["bot_a"][0], clever_session["last_response"]))
-				await asyncio.sleep(random.randint(3, 10))
+			while clever_session["started"] or clever_session["paused"]:
+				if clever_session["paused"]:
+					await asyncio.sleep(1)
+				else:
+					clever_session["last_response"] = clever_session["bot_b"][1].ask(clever_session["last_response"])
+					await client.send_typing(clever_session["channel"])
+					await asyncio.sleep(random.randint(1, 3))
+					await client.send_message(clever_session["channel"], "`{}`: {}".format(clever_session["bot_b"][0], clever_session["last_response"]))
+					if clever_session["tts"]:
+						ttstemp = gTTS(text=clever_session["last_response"], lang="en-au")
+						ttstemp.save(".tlbotclevermp3")
+						ttstemp = clever_session["vclient"].create_ffmpeg_player(".tlbotclevermp3")
+						ttstemp.volume = 0.75
+						ttstemp.start()
+						while ttstemp.is_playing():
+							await asyncio.sleep(2)
+						del(ttstemp)
+					else:
+						await asyncio.sleep(random.randint(3, 10))
+
+					await client.send_typing(clever_session["channel"])
+					await asyncio.sleep(random.randint(1, 3))
+					clever_session["last_response"] = clever_session["bot_a"][1].ask(clever_session["last_response"])
+					await client.send_message(clever_session["channel"], "`{}`: {}".format(clever_session["bot_a"][0], clever_session["last_response"]))
+					if clever_session["tts"]:
+						ttstemp = gTTS(text=clever_session["last_response"], lang="en")
+						ttstemp.save(".tlbotclevermp3")
+						ttstemp = clever_session["vclient"].create_ffmpeg_player(".tlbotclevermp3")
+						ttstemp.volume = 0.75
+						ttstemp.start()
+						while ttstemp.is_playing():
+							await asyncio.sleep(2)
+						del(ttstemp)
+					else:
+						await asyncio.sleep(random.randint(3, 10))
 
 	@staticmethod
 	async def cleverstop(client, message, args):
-		if clever_session["started"]:
+		if message.channel.id == "239285682013601792" and clever_session["started"] or clever_session["paused"]:
+			if clever_session["tts"]:	await Commands.clevertts(client, message, args)
 			clever_session["started"] = False
+			clever_session["paused"] = False
+			clever_session["tts"] = False
+			clever_session["vchannel"] = None
 			await client.send_message(clever_session["channel"], "`Session killed :(`")
 			clever_session["channel"] = None
 			clever_session["bot_a"] = ["Bot A", None]
 			clever_session["bot_b"] = ["Bot B", None]
 			clever_session["last_response"] = ''
+
+	@staticmethod
+	async def cleverpause(client, message, args):
+		if message.channel.id == "239285682013601792" and clever_session["started"] and not clever_session["paused"]:
+			clever_session["started"] = False
+			clever_session["paused"] = True
+			await client.send_message(clever_session["channel"], "`Session paused.`")
+
+	@staticmethod
+	async def cleverresume(client, message, args):
+		if message.channel.id == "239285682013601792" and not clever_session["started"] and clever_session["paused"]:
+			clever_session["started"] = True
+			clever_session["paused"] = False
+			await client.send_message(clever_session["channel"], "`Session resumed.`")
+
+	@staticmethod
+	async def cleveredit(client, message, args):
+		if message.channel.id == "239285682013601792" and clever_session["started"]:
+			if len(args) >= 1:
+				clever_session["last_response"] = ' '.join(args)
+				await client.send_message(clever_session["channel"], "`{}`: {}".format(clever_session["bot_a"][0], clever_session["last_response"]))
+
+	@staticmethod
+	async def clevertts(client, message, args):
+		if message.channel.id == "239285682013601792" and clever_session["started"] or clever_session["paused"]:
+			clever_session["tts"] = not clever_session["tts"]
+			if clever_session["tts"]:
+				await client.send_message(clever_session["channel"], "`Started TTS.`")
+				clever_session["vchannel"] = discord.utils.get(message.server.channels, name='Not So Clever', type=discord.ChannelType.voice)
+				clever_session["vclient"] = await client.join_voice_channel(clever_session["vchannel"])
+			else:
+				await client.send_message(clever_session["channel"], "`Stopped TTS.`")
+				await clever_session["vclient"].disconnect()
+				clever_session["vclient"] = None
+				clever_session["vclient"] = None
+
+	@staticmethod
+	async def cleversave(client, message, args):
+		if message.channel.id == "239285682013601792":
+			with open(".tlbotcleversession", 'wb') as f:
+				pickle.dump(clever_session, f)
+				await client.send_message(clever_session["channel"], "`Session saved!`")
+
+	@staticmethod
+	async def cleverrestore(client, message, args):
+		if message.channel.id == "239285682013601792":
+			with open(".tlbotcleversession", 'rb') as f:
+				clever_session = pickle.load(f)
+				await client.send_message(clever_session["channel"], "`Session restored!`")
 
 commands = {
 	"license": Commands.license,
@@ -158,8 +241,21 @@ commands = {
 	#"testvoice": Commands.testvoice,
 	"playyt": Commands.playyt,
 	"cleverstart": Commands.cleverstart,
-	"cleverstop": Commands.cleverstop
+	"cleverstop": Commands.cleverstop,
+	"cleverpause": Commands.cleverpause,
+	"cleverresume": Commands.cleverresume,
+	"cleveredit": Commands.cleveredit,
+	"clevertts": Commands.clevertts,
+	"cleversave": Commands.cleversave,
+	"cleverrestore": Commands.cleverrestore
 }
+
+markovbotsession = Cleverbot()
+async def markovmsg(client, message):
+	await asyncio.sleep(random.randint(3, 10))
+	await client.send_typing(message.channel)
+	await asyncio.sleep(random.randint(1, 3))
+	await client.send_message(message.channel, markovbotsession.ask(message.content))
 
 class TransportLayerBot(discord.Client):
 	async def on_ready(self):
@@ -167,13 +263,15 @@ class TransportLayerBot(discord.Client):
 
 	async def on_message(self, message):
 		if not message.author == self.user.id:
-			if message.content.startswith('!'):
+			if not message.channel == "239532395055939584" and message.content.startswith('!'):
 				command, *args = message.content[1:].split()
 				if command in commands:
 					try:
 						await commands[command](self, message, args)
 					except Exception as e:
 						await self.send_message(message.channel, "Something broke:\n```{}```".format(e))
+			elif message.author.id == "217427634311790592" and message.channel.id == "239532395055939584":
+				await markovmsg(self, message)
 
 def main():
 	parser = argparse.ArgumentParser(description="TransportLayerBot for Discord")
