@@ -238,6 +238,7 @@ class Commands():
 		if message.author.id == "188013945699696640":
 			if not bee_session["started"]:
 				bee_session["started"] = True
+				bee_session["channel"] = message.channel
 				with open("beemovienoblank.txt", 'r') as f:
 					for line in f:
 						if bee_session["started"]:
