@@ -38,6 +38,11 @@ clever_session = {
 	"last_response": ''
 }
 
+bee_session = {
+	"started": False,
+	"channel": None
+}
+
 class Commands():
 	@staticmethod
 	async def license(client, message, args):
@@ -228,6 +233,21 @@ class Commands():
 				clever_session = pickle.load(f)
 				await client.send_message(clever_session["channel"], "`Session restored!`")
 
+	@staticmethod
+	async def beemovie(client, message, args):
+		if message.user.id == "188013945699696640":
+			if not bee_session["started"]:
+				bee_session["started"] = True
+				with open("beemovienoblank.txt", 'r') as f:
+					for line in f:
+						if bee_session["started"]:
+							await client.send_typing(bee_session["channel"])
+							await asyncio.sleep(len(line) * 0.06)
+							await client.send_message(bee_session["channel"], line)
+						else:	break
+			else:
+				bee_session["started"] = False
+
 commands = {
 	"license": Commands.license,
 	"source": Commands.source,
@@ -247,7 +267,8 @@ commands = {
 	"cleveredit": Commands.cleveredit,
 	"clevertts": Commands.clevertts,
 	"cleversave": Commands.cleversave,
-	"cleverrestore": Commands.cleverrestore
+	"cleverrestore": Commands.cleverrestore,
+	"beemovie": Commands.beemovie
 }
 
 markovbotsession = Cleverbot()
