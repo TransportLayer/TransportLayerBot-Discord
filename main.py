@@ -235,7 +235,7 @@ class Commands():
 
 	@staticmethod
 	async def beemovie(client, message, args):
-		if message.user.id == "188013945699696640":
+		if message.author.id == "188013945699696640":
 			if not bee_session["started"]:
 				bee_session["started"] = True
 				with open("beemovienoblank.txt", 'r') as f:
