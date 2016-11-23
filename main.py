@@ -23,6 +23,9 @@ import argparse
 import discord
 import asyncio
 
+def safe_string(dangerous_string):
+	return dangerous_string.replace('\n', '\\n').replace('\r', '\\r').replace('\033[', '[CSI]').replace('\033', '[ESC]')
+
 def setup_logger(level_string):
 	numeric_level = getattr(logging, level_string.upper(), None)
 	if not isinstance(numeric_level, int):
@@ -41,6 +44,14 @@ def setup_logger(level_string):
 	stdout_logger.setFormatter(log_formatter)
 	root_logger.addHandler(stdout_logger)
 
+async def send_message(client, source, message):
+	logging.debug("{} {} ({} #{}) <- {}".format(source.server.id, source.channel.id, source.server.name, source.channel.name, safe_string(message)))
+	await client.send_message(source.channel, message)
+
+async def send_warn(client, source, message):
+	logging.warn("Unhandled exception: {}".format(safe_string(message)))
+	await send_message(client, source, "Something's wrong...\n```{}```".format(message))
+
 class Commands():
 	@staticmethod
 	async def license(client, message, args):
@@ -57,7 +68,8 @@ class Commands():
 commands = {
 	"license": Commands.license,
 	"source": Commands.source,
-	"test": Commands.test
+	"test": Commands.test,
+	"breakthebot": None
 }
 
 class TransportLayerBot(discord.Client):
@@ -72,7 +84,7 @@ class TransportLayerBot(discord.Client):
 					try:
 						await commands[command](self, message, args)
 					except Exception as e:
-						await self.send_message(message.channel, "Something broke:\n```{}```".format(e))
+						await send_warn(self, message, "!{} {}\n{}".format(command, args, e))
 
 def main():
 	parser = argparse.ArgumentParser(description="TransportLayerBot for Discord")
