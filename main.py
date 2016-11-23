@@ -18,9 +18,28 @@
 #   along with this program.  If not, see <http://www.gnu.org/licenses/>.     #
 ###############################################################################
 
+import logging
 import argparse
 import discord
 import asyncio
+
+def setup_logger(level_string):
+	numeric_level = getattr(logging, level_string.upper(), None)
+	if not isinstance(numeric_level, int):
+		raise Value("Invalid log level: {}".format(level_string))
+
+	log_formatter = logging.Formatter("[%(asctime)s] [%(name)s/%(levelname)s] %(message)s")
+
+	root_logger = logging.getLogger()
+	root_logger.setLevel(numeric_level)
+
+	file_logger = logging.FileHandler("TransportLayerBot.log")
+	file_logger.setFormatter(log_formatter)
+	root_logger.addHandler(file_logger)
+
+	stdout_logger = logging.StreamHandler()
+	stdout_logger.setFormatter(log_formatter)
+	root_logger.addHandler(stdout_logger)
 
 class Commands():
 	@staticmethod
@@ -43,7 +62,7 @@ commands = {
 
 class TransportLayerBot(discord.Client):
 	async def on_ready(self):
-		print("Logged in as {}, ID {}.".format(self.user.name, self.user.id))
+		logging.info("Logged in as {}, ID {}.".format(self.user.name, self.user.id))
 
 	async def on_message(self, message):
 		if not message.author == self.user.id:
@@ -58,6 +77,7 @@ class TransportLayerBot(discord.Client):
 def main():
 	parser = argparse.ArgumentParser(description="TransportLayerBot for Discord")
 	parser.add_argument("-t", "--token", type=str, metavar="TOKEN", dest="TOKEN", help="bot user application token", action="store", required=True)
+	parser.add_argument("-l", "--log", type=str, metavar="LEVEL", dest="LOG_LEVEL", help="log level", action="store", default="INFO")
 	SETTINGS = vars(parser.parse_args())
 
 	try:
@@ -74,14 +94,16 @@ Get the source: https://github.com/TransportLayer/TransportLayerBot-Discord
  |     ||     ||     |    |_|    |_____|   /__/  /_/  /
  |_____||_____||_____|
 """)
-		print("Starting TransportLayerBot with Discord version {}...".format(discord.__version__))
+
+		setup_logger(SETTINGS["LOG_LEVEL"])
+
+		logging.info("Starting TransportLayerBot with Discord version {}.".format(discord.__version__))
 
 		client = TransportLayerBot()
 		client.run(SETTINGS["TOKEN"])
 	finally:
-		print("Stopping...")
+		logging.info("Stopping.")
 		client.logout()
-
 
 if __name__ == "__main__":
 	main()
