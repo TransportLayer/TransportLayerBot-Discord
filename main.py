@@ -26,7 +26,7 @@ import asyncio
 def safe_string(dangerous_string):
 	return dangerous_string.replace('\n', '\\n').replace('\r', '\\r').replace('\033[', '[CSI]').replace('\033', '[ESC]')
 
-def setup_logger(level_string):
+def setup_logger(level_string, log_file):
 	numeric_level = getattr(logging, level_string.upper(), None)
 	if not isinstance(numeric_level, int):
 		raise Value("Invalid log level: {}".format(level_string))
@@ -38,7 +38,7 @@ def setup_logger(level_string):
 	root_logger = logging.getLogger()
 	root_logger.setLevel(numeric_level)
 
-	file_logger = logging.FileHandler("TransportLayerBot.log")
+	file_logger = logging.FileHandler(log_file)
 	file_logger.setFormatter(file_formatter)
 	root_logger.addHandler(file_logger)
 
@@ -92,6 +92,7 @@ def main():
 	parser = argparse.ArgumentParser(description="TransportLayerBot for Discord")
 	parser.add_argument("-t", "--token", type=str, metavar="TOKEN", dest="TOKEN", help="bot user application token", action="store", required=True)
 	parser.add_argument("-l", "--log", type=str, metavar="LEVEL", dest="LOG_LEVEL", help="log level", action="store", default="INFO")
+	parser.add_argument("-o", "--output", type=str, metavar="FILE", dest="LOG_FILE", help="file to write logs to", action="store", default="TransportLayerBot.log")
 	SETTINGS = vars(parser.parse_args())
 
 	try:
@@ -109,7 +110,7 @@ Get the source: https://github.com/TransportLayer/TransportLayerBot-Discord
  |_____||_____||_____|
 """)
 
-		setup_logger(SETTINGS["LOG_LEVEL"])
+		setup_logger(SETTINGS["LOG_LEVEL"], SETTINGS["LOG_FILE"])
 
 		logging.info("Starting TransportLayerBot with Discord version {}.".format(discord.__version__))
 
