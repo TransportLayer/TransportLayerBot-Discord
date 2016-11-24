@@ -31,17 +31,19 @@ def setup_logger(level_string):
 	if not isinstance(numeric_level, int):
 		raise Value("Invalid log level: {}".format(level_string))
 
-	log_formatter = logging.Formatter("[%(asctime)s] [%(name)s/%(levelname)s] %(message)s")
+	verbose_formatter = logging.Formatter("[%(asctime)s] [%(name)s/%(levelname)s] %(message)s")
+	file_formatter = verbose_formatter
+	stdout_formatter = verbose_formatter if numeric_level == logging.DEBUG else logging.Formatter("[%(asctime)s] [%(levelname)s] %(message)s", "%H:%M:%S")
 
 	root_logger = logging.getLogger()
 	root_logger.setLevel(numeric_level)
 
 	file_logger = logging.FileHandler("TransportLayerBot.log")
-	file_logger.setFormatter(log_formatter)
+	file_logger.setFormatter(file_formatter)
 	root_logger.addHandler(file_logger)
 
 	stdout_logger = logging.StreamHandler()
-	stdout_logger.setFormatter(log_formatter)
+	stdout_logger.setFormatter(stdout_formatter)
 	root_logger.addHandler(stdout_logger)
 
 async def send_message(client, source, message):
