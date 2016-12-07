@@ -79,7 +79,7 @@ class TransportLayerBot(discord.Client):
 		logging.info("Logged in as {}, ID {}.".format(self.user.name, self.user.id))
 
 	async def on_message(self, message):
-		if not message.author == self.user.id:
+		if not message.author.bot:
 			if message.content.startswith('!'):
 				command, *args = message.content[1:].split()
 				if command in commands:
