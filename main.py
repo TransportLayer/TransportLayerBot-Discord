@@ -87,6 +87,11 @@ class Commands():
 
 	@staticmethod
 	async def converse(client, source, args):
+		for clever in active_clevers:
+			if source.channel == clever.session["channel"]:
+				await send_message(client, source, "We're already conversing!")
+				return
+
 		active_clevers.append(Clever(client, source))
 		await active_clevers[len(active_clevers) - 1].send_hello(client, source)
 		
