@@ -56,16 +56,16 @@ async def send_warn(client, source, message):
 
 class Commands():
 	@staticmethod
-	async def license(client, message, args):
-		await client.send_message(message.channel, "I'm licensed under the GNU Affero General Public License.\nFor details, visit: https://www.gnu.org/licenses/agpl.html")
+	async def license(client, source, args):
+		await send_message(client, source, "I'm licensed under the GNU Affero General Public License.\nFor details, visit: https://www.gnu.org/licenses/agpl.html")
 
 	@staticmethod
-	async def source(client, message, args):
-		await client.send_message(message.channel, "Get my source code here: https://github.com/TransportLayer/TransportLayerBot-Discord")
+	async def source(client, source, args):
+		await send_message(client, source, "Get my source code here: https://github.com/TransportLayer/TransportLayerBot-Discord")
 
 	@staticmethod
-	async def test(client, message, args):
-		await client.send_message(message.channel, "Tested!")
+	async def test(client, source, args):
+		await send_message(client, source, "Tested!")
 
 commands = {
 	"license": Commands.license,
