@@ -50,6 +50,9 @@ async def send_message(client, source, message):
 	logging.debug("{} {} ({} #{}) <- {}".format(source.server.id, source.channel.id, source.server.name, source.channel.name, safe_string(message)))
 	await client.send_message(source.channel, message)
 
+async def receive_message(source):
+	logging.debug("{} {} ({} #{}) {} ({}) -> {}".format(source.server.id, source.channel.id, source.server.name, source.channel.name, source.author.id, source.author.name, safe_string(source.content)))
+
 async def send_warn(client, source, message):
 	logging.warn("Unhandled exception: {}".format(safe_string(message)))
 	await send_message(client, source, "Something's wrong...\n```{}```".format(message))
@@ -80,6 +83,8 @@ class TransportLayerBot(discord.Client):
 
 	async def on_message(self, message):
 		if not message.author.bot:
+			await receive_message(message)
+
 			if message.content.startswith('!'):
 				command, *args = message.content[1:].split()
 				if command in commands:
