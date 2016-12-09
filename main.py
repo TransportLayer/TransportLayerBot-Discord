@@ -22,6 +22,9 @@ import logging
 import argparse
 import discord
 import asyncio
+from cleverbot import Cleverbot
+from time import time
+from random import randint
 
 def safe_string(dangerous_string):
 	return dangerous_string.replace('\n', '\\n').replace('\r', '\\r').replace('\033[', '[CSI]').replace('\033', '[ESC]')
@@ -47,11 +50,23 @@ def setup_logger(level_string, log_file):
 	root_logger.addHandler(stdout_logger)
 
 async def send_message(client, source, message):
-	logging.debug("{} {} ({} #{}) <- {}".format(source.server.id, source.channel.id, source.server.name, source.channel.name, safe_string(message)))
+	prefix = None
+	if source.channel.is_private:
+		prefix = "{} (Private) {} ({})".format(source.channel.id, source.author.id, source.author.name)
+	else:
+		prefix = "{} {} ({} #{})".format(source.server.id, source.channel.id, source.server.name, source.channel.name)
+
+	logging.debug("{} <- {}".format(prefix, safe_string(message)))
 	await client.send_message(source.channel, message)
 
 async def receive_message(source):
-	logging.debug("{} {} ({} #{}) {} ({}) -> {}".format(source.server.id, source.channel.id, source.server.name, source.channel.name, source.author.id, source.author.name, safe_string(source.content)))
+	prefix = None
+	if source.channel.is_private:
+		prefix = "{} (Private) {} ({})".format(source.channel.id, source.author.id, source.author.name)
+	else:
+		prefix = "{} {} ({} #{}) {} ({})".format(source.server.id, source.channel.id, source.server.name, source.channel.name, source.author.id, source.author.name)
+
+	logging.debug("{} -> {}".format(prefix, safe_string(source.content)))
 
 async def send_warn(client, source, message):
 	logging.warn("Unhandled exception: {}".format(safe_string(message)))
@@ -70,12 +85,53 @@ class Commands():
 	async def test(client, source, args):
 		await send_message(client, source, "Tested!")
 
+	@staticmethod
+	async def converse(client, source, args):
+		new_clever = Clever(client, source)
+		await new_clever.send_hello(client, source)
+		active_clevers.append(new_clever)
+		
+
 commands = {
 	"license": Commands.license,
 	"source": Commands.source,
 	"test": Commands.test,
-	"breakthebot": None
+	"breakthebot": None,
+	"converse": Commands.converse
 }
+
+class Clever:
+	def __init__(self, client, source, name=None):
+		self.session = {
+			"bot": Cleverbot(),
+			"name": name,
+			"channel": source.channel,
+			"last_message": time()
+		}
+
+	async def send_hello(self, client, source):
+		await client.send_typing(source.channel)
+		await asyncio.sleep(1)
+		response = "Hello!"
+		if self.session["name"]:
+			response = "`{}`: {}".format(self.session["name"])
+		await send_message(client, source, response)
+
+	async def ask(self, client, source, no_prefix):
+		if time() - self.session["last_message"] >= 5:
+			if not no_prefix:
+				source.content = source.content[len(client.user.id) + 4:]
+			response = self.session["bot"].ask(source.content)
+			await asyncio.sleep(randint(int(len(source.content) / 30), int(len(source.content) / 15)))
+
+			await client.send_typing(source.channel)
+			await asyncio.sleep(len(response) / 15)
+			if self.session["name"]:
+				response = "`{}`: {}".format(self.session["name"])
+			await send_message(client, source, response)
+			self.session["last_message"] = time()
+
+active_clevers = []
 
 class TransportLayerBot(discord.Client):
 	async def on_ready(self):
@@ -92,6 +148,11 @@ class TransportLayerBot(discord.Client):
 						await commands[command](self, message, args)
 					except Exception as e:
 						await send_warn(self, message, "!{} {}\n{}".format(command, args, e))
+
+			elif message.content.startswith("<@{}>".format(self.user.id)) or message.channel.is_private:
+				for clever in active_clevers:
+					if message.channel == clever.session["channel"]:
+						await clever.ask(self, message, message.channel.is_private)
 
 def main():
 	parser = argparse.ArgumentParser(description="TransportLayerBot for Discord")
