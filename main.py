@@ -87,9 +87,8 @@ class Commands():
 
 	@staticmethod
 	async def converse(client, source, args):
-		new_clever = Clever(client, source)
-		await new_clever.send_hello(client, source)
-		active_clevers.append(new_clever)
+		active_clevers.append(Clever(client, source))
+		await active_clevers[len(active_clevers) - 1].send_hello(client, source)
 		
 
 commands = {
