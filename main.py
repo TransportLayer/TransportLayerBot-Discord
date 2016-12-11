@@ -133,6 +133,8 @@ class Clever:
 			if self.session["name"]:
 				response = "`{}`: {}".format(self.session["name"])
 			await send_message(client, source, response)
+		else:
+			await send_message(client, source, "You're typing a bit too quickly for me! Try again in a few seconds.")
 
 active_clevers = []
 
