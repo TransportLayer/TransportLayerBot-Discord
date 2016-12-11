@@ -120,19 +120,25 @@ class Clever:
 			response = "`{}`: {}".format(self.session["name"])
 		await send_message(client, source, response)
 
+	def format_out(self, text):
+		return text.replace('*', '\\*')
+
+	def format_in(self, text):
+		return text.replace('\\*', '*')
+
 	async def ask(self, client, source, no_prefix):
 		if time() - self.session["last_message"] >= 5:
 			self.session["last_message"] = time()
 			if not no_prefix:
 				source.content = source.content[len(client.user.id) + 4:]
-			response = self.session["bot"].ask(source.content)
+			response = self.session["bot"].ask(self.format_in(source.content))
 			await asyncio.sleep(randint(int(len(source.content) / 30), int(len(source.content) / 15)))
 
 			await client.send_typing(source.channel)
 			await asyncio.sleep(len(response) / 15)
 			if self.session["name"]:
 				response = "`{}`: {}".format(self.session["name"])
-			await send_message(client, source, response)
+			await send_message(client, source, self.format_out(response))
 		else:
 			await send_message(client, source, "You're typing a bit too quickly for me! Try again in a few seconds.")
 
