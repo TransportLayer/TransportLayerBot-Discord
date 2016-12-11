@@ -94,7 +94,6 @@ class Commands():
 
 		active_clevers.append(Clever(client, source))
 		await active_clevers[len(active_clevers) - 1].send_hello(client, source)
-		
 
 commands = {
 	"license": Commands.license,
@@ -123,6 +122,7 @@ class Clever:
 
 	async def ask(self, client, source, no_prefix):
 		if time() - self.session["last_message"] >= 5:
+			self.session["last_message"] = time()
 			if not no_prefix:
 				source.content = source.content[len(client.user.id) + 4:]
 			response = self.session["bot"].ask(source.content)
@@ -133,7 +133,6 @@ class Clever:
 			if self.session["name"]:
 				response = "`{}`: {}".format(self.session["name"])
 			await send_message(client, source, response)
-			self.session["last_message"] = time()
 
 active_clevers = []
 
