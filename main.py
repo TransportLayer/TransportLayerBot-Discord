@@ -129,10 +129,11 @@ class Clever:
 	async def ask(self, client, source, no_prefix):
 		if time() - self.session["last_message"] >= 5:
 			self.session["last_message"] = time()
+			await asyncio.sleep(randint(0, 2))
 			if not no_prefix:
 				source.content = source.content[len(client.user.id) + 4:]
 			response = self.session["bot"].ask(self.format_in(source.content))
-			await asyncio.sleep(randint(int(len(source.content) / 30), int(len(source.content) / 15)))
+			await asyncio.sleep(randint(int(len(source.content) / 30), int(len(source.content) / 20)))
 
 			await client.send_typing(source.channel)
 			await asyncio.sleep(len(response) / 15)
@@ -160,7 +161,7 @@ class TransportLayerBot(discord.Client):
 					except Exception as e:
 						await send_warn(self, message, "!{} {}\n{}".format(command, args, e))
 
-			elif message.content.startswith("<@{}>".format(self.user.id)) or message.channel.is_private:
+			elif message.content.startswith(self.user.mention) or message.channel.is_private:
 				for clever in active_clevers:
 					if message.channel == clever.session["channel"]:
 						await clever.ask(self, message, message.channel.is_private)
