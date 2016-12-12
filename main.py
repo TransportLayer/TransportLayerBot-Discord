@@ -137,10 +137,10 @@ class Clever:
 			await client.send_typing(source.channel)
 			await asyncio.sleep(len(response) / 15)
 			if self.session["name"]:
-				response = "`{}`: {}".format(self.session["name"])
-			await send_message(client, source, self.format_out(response))
+				response = "`{}`: {}".format(self.session["name"], response)
+			await send_message(client, source, self.format_out(response).replace("CleverBot", "TransportLayerBot").replace("cleverbot", "TransportLayerBot").replace("clever bot", "TransportLayerBot").replace("Clever Bot", "TransportLayerBot"))
 		else:
-			await send_message(client, source, "You're typing a bit too quickly for me! Try again in a few seconds.")
+			await send_message(client, source, "You're typing a bit too quickly for me, {}! Try again in a few seconds.".format(source.author.mention))
 
 active_clevers = []
 
