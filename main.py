@@ -25,6 +25,9 @@ import asyncio
 from cleverbot import Cleverbot
 from time import time
 from random import randint
+from pymongo import MongoClient
+from datetime import datetime
+
 
 def safe_string(dangerous_string):
 	return dangerous_string.replace('\n', '\\n').replace('\r', '\\r').replace('\033[', '[CSI]').replace('\033', '[ESC]')
@@ -171,6 +174,9 @@ def main():
 	parser.add_argument("-t", "--token", type=str, metavar="TOKEN", dest="TOKEN", help="bot user application token", action="store", required=True)
 	parser.add_argument("-l", "--log", type=str, metavar="LEVEL", dest="LOG_LEVEL", help="log level", action="store", default="INFO")
 	parser.add_argument("-o", "--output", type=str, metavar="FILE", dest="LOG_FILE", help="file to write logs to", action="store", default="TransportLayerBot.log")
+	parser.add_argument("-a", "--address", type=str, metavar="DB HOST", dest="DB_HOST", help="hostname or IP of database", action="store", default="127.0.0.1")
+	parser.add_argument("-p", "--port", type=int, metavar="DB PORT", dest="DB_PORT", help="port of database", action="store", default=27017)
+	parser.add_argument("-d", "--db", type=str, metavar="DATABASE", dest="DB", help="name of the database", action="store", default="tlbot")
 	SETTINGS = vars(parser.parse_args())
 
 	try:
@@ -190,9 +196,24 @@ Get the source: https://github.com/TransportLayer/TransportLayerBot-Discord
 
 		setup_logger(SETTINGS["LOG_LEVEL"], SETTINGS["LOG_FILE"])
 
+		mongo = MongoClient(host=SETTINGS["DB_HOST"], port=SETTINGS["DB_PORT"])
+		db = mongo[SETTINGS["DB"]]
+		db_meta = db.meta.find({"meta": "times"})
+		if db_meta.count():
+			logging.info("Using database \"{}\" created {}.".format(SETTINGS["DB"], db_meta[0]["created"]))
+		else:
+			logging.info("Creating new database \"{}\".".format(SETTINGS["DB"]))
+			db.meta.insert_one(
+				{
+					"meta": "times",
+					"created": datetime.now()
+				}
+			)
+
 		logging.info("Starting TransportLayerBot with Discord version {}.".format(discord.__version__))
 
 		client = TransportLayerBot()
+		client.db = db
 		client.run(SETTINGS["TOKEN"])
 	finally:
 		logging.info("Stopping.")
