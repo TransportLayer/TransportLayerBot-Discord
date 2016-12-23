@@ -35,7 +35,7 @@ def safe_string(dangerous_string):
 def setup_logger(level_string, log_file):
 	numeric_level = getattr(logging, level_string.upper(), None)
 	if not isinstance(numeric_level, int):
-		raise Value("Invalid log level: {}".format(level_string))
+		raise ValueError("Invalid log level: {}".format(level_string))
 
 	verbose_formatter = logging.Formatter("[%(asctime)s] [%(name)s/%(levelname)s] %(message)s")
 	file_formatter = verbose_formatter
